@@ -1,6 +1,12 @@
 # imguilog
+**A simple logging library with an optional ImGui console widget.**
 
-A simple logging library with an optional dear imgui console widget.
+## TODO
+- Make examples crossplatform
+  - As now only DX12 + Win32 works.
+- Detect CMake dependency better.
+  - Only linking correctly on Windows now.
+- Overhaul ununsed code.
 
 ## Features
 
@@ -11,7 +17,7 @@ A simple logging library with an optional dear imgui console widget.
 - Variadic functions
 - Profiler functions
 - Error shutdown and breaking
-- Dear ImGui console logging widget
+- ImGui console logging widget
 
 ## Showcase
 The bundled ImGui widget:
