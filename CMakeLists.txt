@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(UntitledLog CXX)
+project(imguilog CXX)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -17,12 +17,14 @@ set(UL_BUILD_EXAMPLES ON CACHE BOOL "Build the example executable")
 set(ULOG_SOURCES
     ULog.cpp
     ULogImGui.cpp
+    utils/imgui_stdlib.cpp
 )
 
 set(ULOG_HEADERS
     ULog.hpp
     ULogCommon.h
     ULogImGui.hpp
+    utils/imgui_stdlib.h
 )
 
 # C API sources
@@ -35,18 +37,6 @@ set(CULOG_HEADERS
     C/CULog.h
     C/CULogImGui.h
 )
-
-# Create the C++ library
-add_library(UntitledLog STATIC ${ULOG_SOURCES} ${ULOG_HEADERS})
-
-# Create the C API library
-add_library(CUntitledLog STATIC ${CULOG_SOURCES} ${CULOG_HEADERS})
-
-target_include_directories(UntitledLog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(CUntitledLog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/C)
-
-
-
 include(FetchContent)
 FetchContent_Declare(
     imgui
@@ -55,6 +45,24 @@ FetchContent_Declare(
     GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(imgui)
+
+add_compile_definitions(ULOG_IMGUI)
+# After FetchContent_MakeAvailable(imgui), add the following lines:
+FetchContent_MakeAvailable(imgui)
+
+# Create the C++ library
+add_library(imguilog STATIC ${ULOG_SOURCES} ${ULOG_HEADERS})
+
+# Create the C API library
+add_library(Cimguilog STATIC ${CULOG_SOURCES} ${CULOG_HEADERS})
+
+target_include_directories(imguilog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(Cimguilog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/C)
+
+# Link ImGui to your libraries
+target_link_libraries(imguilog PUBLIC imgui)
+target_link_libraries(Cimguilog PUBLIC imgui)
+
 
 # Optionally, link ImGui if available
 # find_package(imgui REQUIRED) # Uncomment and adjust if you want to link ImGui

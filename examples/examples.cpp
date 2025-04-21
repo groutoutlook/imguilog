@@ -4,7 +4,7 @@
 #include <vector>
 #include <print>
 
-#include "imgui.h"
+#include <imgui.h>
 #include "ULog.hpp"
 #include "ULogCommon.h"
 
@@ -12,8 +12,7 @@
 
 
 int main (){
-
-	std::println("Hello World");
+	std::println("Press Enter to continue...");
 	auto wait = std::cin.get();
     return 0;
 }
