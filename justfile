@@ -27,7 +27,7 @@ placeholder:
 alias r := run
 default_args := 'args here'
 run args=default_args:
-    @Write-Host {{default_args}} -ForegroundColor Red
+    bin\imguilog_example.exe
 
 
 alias b := build
