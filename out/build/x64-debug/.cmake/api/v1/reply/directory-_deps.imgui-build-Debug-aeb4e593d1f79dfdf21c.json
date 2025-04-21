@@ -1,0 +1,145 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"out/build/x64-debug/_deps/imgui-src/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 178,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 181,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 184,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 190,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 225,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 229,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"D:/ProgramDataD/MiscLang/01-C++/repo/UntitledLog/bin-lib/imguid.lib"
+			],
+			"targetId" : "imgui::@7dc1a76433755a1e24d0",
+			"targetIndex" : 2,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "include/imgui",
+			"paths" : 
+			[
+				"out/build/x64-debug/_deps/imgui-src/imgui/imgui.h",
+				"out/build/x64-debug/_deps/imgui-src/imgui/imconfig.h",
+				"out/build/x64-debug/_deps/imgui-src/imgui/imgui_internal.h",
+				"out/build/x64-debug/_deps/imgui-src/imgui/imstb_rectpack.h",
+				"out/build/x64-debug/_deps/imgui-src/imgui/imstb_textedit.h",
+				"out/build/x64-debug/_deps/imgui-src/imgui/imstb_truetype.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "misc/fonts",
+			"paths" : 
+			[
+				"out/build/x64-debug/_deps/imgui-src/imgui/misc/fonts/Cousine-Regular.ttf",
+				"out/build/x64-debug/_deps/imgui-src/imgui/misc/fonts/DroidSans.ttf",
+				"out/build/x64-debug/_deps/imgui-src/imgui/misc/fonts/Karla-Regular.ttf",
+				"out/build/x64-debug/_deps/imgui-src/imgui/misc/fonts/ProggyClean.ttf",
+				"out/build/x64-debug/_deps/imgui-src/imgui/misc/fonts/ProggyTiny.ttf",
+				"out/build/x64-debug/_deps/imgui-src/imgui/misc/fonts/Roboto-Medium.ttf"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "lib",
+			"destination" : "lib",
+			"isOptional" : true,
+			"paths" : 
+			[
+				"out/build/x64-debug/_deps/imgui-build/Debug/imguid.pdb"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 5,
+			"component" : "Unspecified",
+			"destination" : "lib/cmake/imgui",
+			"exportName" : "ImGuiTargets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "imgui::@7dc1a76433755a1e24d0",
+					"index" : 2
+				}
+			],
+			"paths" : 
+			[
+				"_deps/imgui-build/CMakeFiles/Export/1c9f1db1a0c9398944d65050189647a4/ImGuiTargets.cmake"
+			],
+			"type" : "export"
+		},
+		{
+			"backtrace" : 6,
+			"component" : "Unspecified",
+			"destination" : "lib/cmake/imgui",
+			"paths" : 
+			[
+				"out/build/x64-debug/_deps/imgui-build/generated/ImGuiConfigVersion.cmake",
+				"out/build/x64-debug/_deps/imgui-build/generated/ImGuiConfig.cmake"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "_deps/imgui-build",
+		"source" : "out/build/x64-debug/_deps/imgui-src"
+	}
+}

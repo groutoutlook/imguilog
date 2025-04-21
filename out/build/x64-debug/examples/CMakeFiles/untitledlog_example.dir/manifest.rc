@@ -1,0 +1,2 @@
+#pragma code_page(65001)
+1 /* CREATEPROCESS_MANIFEST_RESOURCE_ID */ 24 /* RT_MANIFEST */ "D:/ProgramDataD/MiscLang/01-C++/repo/UntitledLog/out/build/x64-debug/examples/CMakeFiles/untitledlog_example.dir/embed.manifest"

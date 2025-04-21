@@ -1,0 +1,64 @@
+cmake_minimum_required(VERSION 3.20)
+project(UntitledLog CXX)
+
+set(CMAKE_C_STANDARD 99)
+
+if (PROJECT_IS_TOP_LEVEL)
+    set(CMAKE_CXX_STANDARD 23)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin-lib")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin-etc")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+endif()
+
+
+set(UL_BUILD_EXAMPLES ON CACHE BOOL "Build the example executable")
+
+# Main C++ sources
+set(ULOG_SOURCES
+    ULog.cpp
+    ULogImGui.cpp
+)
+
+set(ULOG_HEADERS
+    ULog.hpp
+    ULogCommon.h
+    ULogImGui.hpp
+)
+
+# C API sources
+set(CULOG_SOURCES
+    C/CULog.cpp
+    C/CULogImGui.cpp
+)
+
+set(CULOG_HEADERS
+    C/CULog.h
+    C/CULogImGui.h
+)
+
+# Create the C++ library
+add_library(UntitledLog STATIC ${ULOG_SOURCES} ${ULOG_HEADERS})
+
+# Create the C API library
+add_library(CUntitledLog STATIC ${CULOG_SOURCES} ${CULOG_HEADERS})
+
+target_include_directories(UntitledLog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(CUntitledLog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/C)
+
+
+
+include(FetchContent)
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/giladreich/cmake-imgui
+    GIT_TAG v1.90.7
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(imgui)
+
+# Optionally, link ImGui if available
+# find_package(imgui REQUIRED) # Uncomment and adjust if you want to link ImGui
+
+if (UL_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
