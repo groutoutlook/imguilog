@@ -1,7 +1,4 @@
-# UntitledLog
-[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
-[![trello](https://img.shields.io/badge/Trello-UVK-blue])](https://trello.com/b/0upjsxT0/untitledvukangameengine)
-[![Discord](https://img.shields.io/discord/717037253292982315.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/4wgH8ZE)
+# imguilog
 
 A simple logging library with an optional dear imgui console widget.
 
@@ -15,9 +12,6 @@ A simple logging library with an optional dear imgui console widget.
 - Profiler functions
 - Error shutdown and breaking
 - Dear ImGui console logging widget
-
-## Learning and install
-There are a few short learning articles in the [wiki](https://github.com/MadLadSquad/UntitledLog/wiki). Installation is also located there!
 
 ## Showcase
 The bundled ImGui widget:
