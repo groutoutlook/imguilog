@@ -8,10 +8,19 @@ if (PROJECT_IS_TOP_LEVEL)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin-lib")
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin-etc")
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+    
+    include(FetchContent)
+    FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/giladreich/cmake-imgui
+        GIT_TAG v1.90.7
+        GIT_SHALLOW TRUE
+    )
+    FetchContent_MakeAvailable(imgui)
 endif()
 
 
-set(UL_BUILD_EXAMPLES ON CACHE BOOL "Build the example executable")
+set(UL_BUILD_EXAMPLES OFF CACHE BOOL "Build the example executable")
 
 # Main C++ sources
 set(ULOG_SOURCES
@@ -37,18 +46,8 @@ set(CULOG_HEADERS
     C/CULog.h
     C/CULogImGui.h
 )
-include(FetchContent)
-FetchContent_Declare(
-    imgui
-    GIT_REPOSITORY https://github.com/giladreich/cmake-imgui
-    GIT_TAG v1.90.7
-    GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(imgui)
 
 add_compile_definitions(ULOG_IMGUI)
-# After FetchContent_MakeAvailable(imgui), add the following lines:
-FetchContent_MakeAvailable(imgui)
 
 # Create the C++ library
 add_library(imguilog STATIC ${ULOG_SOURCES} ${ULOG_HEADERS})
