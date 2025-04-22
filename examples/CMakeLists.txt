@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.21)
-
+cmake_minimum_required(VERSION 3.20)
+include(FetchContent)
 FetchContent_Declare(
         glfw
         GIT_REPOSITORY https://github.com/glfw/glfw
@@ -25,4 +25,7 @@ set(IMGUI_BACKEND_HEADERS
 
 add_executable(imguilog_example examples.cpp)
 target_sources(imguilog_example PUBLIC ${IMGUI_BACKEND_SOURCES} ${IMGUI_BACKEND_HEADERS})
-target_link_libraries(imguilog_example PUBLIC imguilog imgui glfw Msvcrt ucrtd)
+target_link_libraries(imguilog_example PUBLIC imguilog 
+imgui 
+glfw 
+Msvcrt ucrtd)
