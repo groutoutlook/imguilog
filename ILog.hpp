@@ -6,13 +6,13 @@
 #include <functional>
 #include <sstream>
 #include <exception>
-#include "ULogCommon.h"
+#include "ILogCommon.h"
 
-namespace ULog
+namespace ILog
 {
-    typedef ULog_LogColour LogColour;
-    typedef ULog_LogOperations LogOperations;
-    typedef ULog_LogType LogType;
+    typedef ILog_LogColour LogColour;
+    typedef ILog_LogOperations LogOperations;
+    typedef ILog_LogType LogType;
 
     // The offset by which the names of the given message types are listed in the logColours array below
     constexpr uint8_t logTypeOffset = 6;
@@ -68,9 +68,9 @@ namespace ULog
 
             messageLog.emplace_back(output, type);
 
-            if (type == ULOG_LOG_TYPE_ERROR && bUsingErrors)
+            if (type == ILOG_LOG_TYPE_ERROR && bUsingErrors)
             {
-#ifdef ULOG_NO_INSTANT_CRASH
+#ifdef ILOG_NO_INSTANT_CRASH
                 std::cin.get();
 #endif
                 std::terminate();
@@ -84,7 +84,7 @@ namespace ULog
 
         std::vector<CommandType> commands;
 
-        LogOperations operationType = ULOG_LOG_OPERATION_TERMINAL;
+        LogOperations operationType = ILOG_LOG_OPERATION_TERMINAL;
 
         static std::string getCurrentTime() noexcept;
         void shutdownFileStream() noexcept;
@@ -126,12 +126,12 @@ namespace ULog
         static void log(const char* message, LogType type, args&&... argv) noexcept
         {
             auto& logger = LoggerInternal::get();
-            if (logger.operationType == ULOG_LOG_OPERATION_FILE_AND_TERMINAL)
+            if (logger.operationType == ILOG_LOG_OPERATION_FILE_AND_TERMINAL)
             {
                 logger.agnostic<false>(message, type, argv...);
                 logger.agnostic<true>(message, type, argv...);
             }
-            else if (logger.operationType == ULOG_LOG_OPERATION_TERMINAL)
+            else if (logger.operationType == ILOG_LOG_OPERATION_TERMINAL)
                 logger.agnostic<false>(message, type, argv...);
             else
                 logger.agnostic<true>(message, type, argv...);
@@ -165,6 +165,6 @@ namespace ULog
         // UntitledImGuiFramework Event Safety - Any time
         ~Timer() noexcept;
     private:
-        ULog_Timer timer{};
+        ILog_Timer timer{};
     };
 }

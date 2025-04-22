@@ -9,10 +9,10 @@
 #include "imgui_impl_dx12.h"
 #include "imgui_impl_win32.h"
 //#include "imgui_impl_glfw.h"
-#include "ULog.hpp"
-#include "ULogCommon.h"
+#include "ILog.hpp"
+#include "ILogCommon.h"
 
-#include "ULogImGui.hpp"
+#include "ILogImGui.hpp"
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include <tchar.h>
@@ -127,28 +127,28 @@ int main(int, char**)
 	// Main loop
 	bool done = false;
 
-	ULog::Logger::setEnableLogging(true);
-	ULog::ImGuiConsole console;
-	ULog::Logger::log("Hello World", ULOG_LOG_TYPE_MESSAGE, "Hello", "World");
+	ILog::Logger::setEnableLogging(true);
+	ILog::ImGuiConsole console;
+	ILog::Logger::log("Hello World", ILOG_LOG_TYPE_MESSAGE, "Hello", "World");
 
 	auto bOpen = true;
 	auto bEnter = false;
 	auto console_related_ui = [&console, &bOpen, &bEnter] {
 		console.displayFull(bOpen, &bEnter);
 		if (bEnter) {
-			ULog::Logger::log("entered a command.", ULOG_LOG_TYPE_MESSAGE);
+			ILog::Logger::log("entered a command.", ILOG_LOG_TYPE_MESSAGE);
 			bEnter = false;
 		}
 		if (ImGui::Button("Log Message"))
-			ULog::Logger::log("Hello World", ULOG_LOG_TYPE_MESSAGE, "Hello", "World");
+			ILog::Logger::log("Hello World", ILOG_LOG_TYPE_MESSAGE, "Hello", "World");
 		if (ImGui::Button("Log Warning"))
-			ULog::Logger::log("Hello World", ULOG_LOG_TYPE_WARNING, "Hello", "World");
+			ILog::Logger::log("Hello World", ILOG_LOG_TYPE_WARNING, "Hello", "World");
 		if (ImGui::Button("Log Error"))
-			ULog::Logger::log("Hello World", ULOG_LOG_TYPE_ERROR, "Hello", "World");
+			ILog::Logger::log("Hello World", ILOG_LOG_TYPE_ERROR, "Hello", "World");
 		if (ImGui::Button("Log Note"))
-			ULog::Logger::log("Hello World", ULOG_LOG_TYPE_NOTE, "Hello", "World");
+			ILog::Logger::log("Hello World", ILOG_LOG_TYPE_NOTE, "Hello", "World");
 		if (ImGui::Button("Log Success"))
-			ULog::Logger::log("Hello World", ULOG_LOG_TYPE_SUCCESS, "Hello", "World");
+			ILog::Logger::log("Hello World", ILOG_LOG_TYPE_SUCCESS, "Hello", "World");
 		};
 	while (!done)
 	{

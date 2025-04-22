@@ -25,23 +25,23 @@ endif()
 set(ILOG_BUILD_EXAMPLES OFF CACHE BOOL "Build the example executable")
 
 # Main C++ sources
-set(ULOG_SOURCES
-    ULog.cpp
-    ULogImGui.cpp
+set(ILOG_SOURCES
+    ILog.cpp
+    ILogImGui.cpp
     utils/imgui_stdlib.cpp # for extra use of std::string in imgui.
 )
 
-set(ULOG_HEADERS
-    ULog.hpp
-    ULogCommon.h
-    ULogImGui.hpp
+set(ILOG_HEADERS
+    ILog.hpp
+    ILogCommon.h
+    ILogImGui.hpp
     utils/imgui_stdlib.h
 )
 
-add_compile_definitions(ULOG_IMGUI)
+add_compile_definitions(ILOG_IMGUI)
 
 # Create the C++ library
-add_library(imguilog STATIC ${ULOG_SOURCES} ${ULOG_HEADERS})
+add_library(imguilog STATIC ${ILOG_SOURCES} ${ILOG_HEADERS})
 
 target_include_directories(imguilog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

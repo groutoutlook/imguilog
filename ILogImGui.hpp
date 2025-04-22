@@ -1,10 +1,10 @@
 #pragma once
-#include "ULog.hpp"
-#ifdef ULOG_IMGUI
+#include "ILog.hpp"
+#ifdef ILOG_IMGUI
 #if __has_include(<imgui.h>)
 #include "imgui.h"
 
-namespace ULog
+namespace ILog
 {
     // UntitledImGuiFramework Event Safety - Any time
     class MLS_PUBLIC_API ImGuiConsole
