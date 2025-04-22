@@ -28,10 +28,10 @@ namespace ULog
 
         static void showHelpMessage(const std::string&) noexcept;
 
-        ImVec4 success = { 0.0f, 1.0f, 0.0f, 1.0f };
-        ImVec4 warning = { 1.0f, 1.0f, 0.0f, 1.0f };
+        ImVec4 success = { 0.2f, 1.0f, 0.2f, 1.0f };
+        ImVec4 warning = { 1.0f, 1.0f, 0.2f, 1.0f };
         ImVec4 error = { 1.0f, 0.0f, 0.0f, 1.0f };
-        ImVec4 note = { 0.0f, 0.0f, 1.0f, 1.0f };
+        ImVec4 note = { 0.2f, 0.5f, 1.0f, 1.0f };
         ImVec4 message = { 1.0f, 1.0f, 1.0f, 1.0f };
     };
 }
