@@ -21,6 +21,8 @@ namespace ULog
         // UntitledImGuiFramework Event Safety - Any time
         static void addCommand(const CommandType& cmd) noexcept;
 
+        static void executeCommand(const std::string& cmd) noexcept;
+
         // UntitledImGuiFramework Event Safety - Any time
         void setLogColour(ImVec4 colour, LogType type) noexcept;
     private:

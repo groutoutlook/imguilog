@@ -132,8 +132,31 @@ int main(int, char**)
 	ULog::Logger::log("Hello World", ULOG_LOG_TYPE_MESSAGE, "Hello", "World");
 
 	auto bOpen = true;
+	auto bEnter = false;
+	auto console_related_ui = [&console, &bOpen, &bEnter] {
+		console.displayFull(bOpen, &bEnter);
+		if (bEnter) {
+			ULog::Logger::log("entered a command.", ULOG_LOG_TYPE_MESSAGE);
+			bEnter = false;
+		}
+		if (ImGui::Button("Log Message"))
+			ULog::Logger::log("Hello World", ULOG_LOG_TYPE_MESSAGE, "Hello", "World");
+		if (ImGui::Button("Log Warning"))
+			ULog::Logger::log("Hello World", ULOG_LOG_TYPE_WARNING, "Hello", "World");
+		if (ImGui::Button("Log Error"))
+			ULog::Logger::log("Hello World", ULOG_LOG_TYPE_ERROR, "Hello", "World");
+		if (ImGui::Button("Log Note"))
+			ULog::Logger::log("Hello World", ULOG_LOG_TYPE_NOTE, "Hello", "World");
+		if (ImGui::Button("Log Success"))
+			ULog::Logger::log("Hello World", ULOG_LOG_TYPE_SUCCESS, "Hello", "World");
+		};
 	while (!done)
 	{
+		// INFO: Copilot AI helped me this part.
+		//if (GetAsyncKeyState(VK_CONTROL) & 0x8000 && GetAsyncKeyState('W') & 0x8000) {
+		//	done = true; // Exit loop when Ctrl+W is pressed
+		//}
+
 		// Poll and handle messages (inputs, window resize, etc.)
 		// See the WndProc() function below for our to dispatch events to the Win32 backend.
 		MSG msg;
@@ -178,19 +201,8 @@ int main(int, char**)
 			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-			//console.display();
-			console.displayFull(bOpen, nullptr);
-
-			if (ImGui::Button("Log Message"))
-				ULog::Logger::log("Hello World", ULOG_LOG_TYPE_MESSAGE, "Hello", "World");
-			if (ImGui::Button("Log Warning"))
-				ULog::Logger::log("Hello World", ULOG_LOG_TYPE_WARNING, "Hello", "World");
-			if (ImGui::Button("Log Error"))
-				ULog::Logger::log("Hello World", ULOG_LOG_TYPE_ERROR, "Hello", "World");
-			if (ImGui::Button("Log Note"))
-				ULog::Logger::log("Hello World", ULOG_LOG_TYPE_NOTE, "Hello", "World");
-			if (ImGui::Button("Log Success"))
-				ULog::Logger::log("Hello World", ULOG_LOG_TYPE_SUCCESS, "Hello", "World");
+			// HACK: should have a more proper place for them.
+			console_related_ui();
 
 			if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
 				counter++;
@@ -495,6 +507,12 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_SYSCOMMAND:
 		if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
 			return 0;
+		break;
+		// INFO: another AI solution for polling keys.
+	case WM_KEYDOWN:
+		if (wParam == 'W' && (GetKeyState(VK_CONTROL) & 0x8000)) {
+			::PostQuitMessage(0); // Quit when Ctrl+W is pressed
+		}
 		break;
 	case WM_DESTROY:
 		::PostQuitMessage(0);
