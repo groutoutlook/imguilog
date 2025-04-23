@@ -13,6 +13,7 @@
 #include "ILogCommon.h"
 
 #include "ILogImGui.hpp"
+#include "utils/imgui_stdlib.h"
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include <tchar.h>
@@ -133,6 +134,14 @@ int main(int, char**)
 
 	auto bOpen = true;
 	auto bEnter = false;
+	static int active_option(1);
+	static std::vector<std::string> settings{ "2m0","1m0","12m0","alu","not" };
+	auto combo_filter = [&] {
+		if (ImGui::ComboWithFilter("Model", &active_option, settings))
+		{
+			ILog::Logger::log("You select ", ILOG_LOG_TYPE_SUCCESS, settings.at(active_option));
+		}
+		};
 	auto console_related_ui = [&console, &bOpen, &bEnter] {
 		console.displayFull(bOpen, &bEnter);
 		if (bEnter) {
@@ -150,6 +159,7 @@ int main(int, char**)
 		if (ImGui::Button("Log Success"))
 			ILog::Logger::log("Hello World", ILOG_LOG_TYPE_SUCCESS, "Hello", "World");
 		};
+
 	while (!done)
 	{
 		// INFO: Copilot AI helped me this part.
@@ -212,7 +222,13 @@ int main(int, char**)
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			ImGui::End();
 		}
-
+		// INFO: 2.1 another windows
+		{
+			ImGui::Begin("Combo Filter");
+			ImGui::Text("Test keys on these.");
+			combo_filter();
+			ImGui::End();
+		}
 		// 3. Show another simple window.
 		if (show_another_window)
 		{
