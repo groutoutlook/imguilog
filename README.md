@@ -1,6 +1,9 @@
 # imguilog
 **A simple logging library with an optional ImGui console widget.**
-
+## Build
+```sh
+vcpkg install imgui[glfw-binding,opengl3-binding,dx11-binding,dx12-binding,vulkan-binding,win32-binding] --recurse
+```
 ## TODO
 - Make examples crossplatform
   - As now only DX12 + Win32 works.

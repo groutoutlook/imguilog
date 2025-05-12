@@ -1,22 +1,24 @@
 cmake_minimum_required(VERSION 3.20)
 project(imguilog CXX)
 
-set(CMAKE_C_STANDARD 23)
+#set(CMAKE_C_STANDARD 23)
 
 if (PROJECT_IS_TOP_LEVEL)
     set(CMAKE_CXX_STANDARD 23)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin-lib")
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin-etc")
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
-    
-    include(FetchContent)
-    FetchContent_Declare(
-        imgui
-        GIT_REPOSITORY https://github.com/giladreich/cmake-imgui
-        GIT_TAG v1.90.7
-        GIT_SHALLOW TRUE
-    )
-    FetchContent_MakeAvailable(imgui)
+
+    find_package(imgui CONFIG REQUIRED)
+    find_package(glfw3 CONFIG REQUIRED)
+    #include(FetchContent)
+    #FetchContent_Declare(
+    #    imgui
+    #    GIT_REPOSITORY https://github.com/giladreich/cmake-imgui
+    #    GIT_TAG v1.90.7
+    #    GIT_SHALLOW TRUE
+    #)
+    # FetchContent_MakeAvailable(imgui)
 else()
     # INFO: I dont even know how can I do this.
 endif()
@@ -46,7 +48,7 @@ add_library(imguilog STATIC ${ILOG_SOURCES} ${ILOG_HEADERS})
 target_include_directories(imguilog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Link ImGui to your libraries
-target_link_libraries(imguilog PUBLIC imgui)
+target_link_libraries(imguilog PUBLIC imgui::imgui)
 
 if (ILOG_BUILD_EXAMPLES)
     add_subdirectory(examples)

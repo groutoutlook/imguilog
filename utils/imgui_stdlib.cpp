@@ -168,9 +168,13 @@ bool ImGui::ComboWithFilter(const char* label, int* current_item, const std::vec
 	popup_max_height_in_items = ImMin(popup_max_height_in_items, show_count);
 
 	// TODO: migrate to a newer one and fix this.
-	//if (!(g.NextWindowData.HasFlags & ImGuiNextWindowDataFlags_HasSizeConstraint))
+
+#	if IMGUI_VERSION_NUM <= 19045
 	// HACK: for imgui pre 1.91 
 	if (!(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint))
+#else
+	if (!(g.NextWindowData.HasFlags & ImGuiNextWindowDataFlags_HasSizeConstraint))
+#endif
 	{
 		int items_for_height = popup_max_height_in_items + 3;        // extra for search bar
 		SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, CalcMaxPopupHeightFromItemCount(items_for_height)));
