@@ -4,12 +4,6 @@
 ```sh
 vcpkg install imgui[glfw-binding,opengl3-binding,dx11-binding,dx12-binding,vulkan-binding,win32-binding] --recurse
 ```
-## TODO
-- Make examples crossplatform
-  - As now only DX12 + Win32 works.
-- Detect CMake dependency better.
-  - Only linking correctly on Windows now.
-- Overhaul ununsed code.
 
 ## Features
 

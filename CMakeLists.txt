@@ -21,6 +21,7 @@ if (PROJECT_IS_TOP_LEVEL)
     # FetchContent_MakeAvailable(imgui)
 else()
     # INFO: I dont even know how can I do this.
+    add_library(imgui::imgui ALIAS imgui)
 endif()
 
 
