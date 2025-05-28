@@ -1,6 +1,6 @@
 #include "ILogImGui.hpp"
 #ifdef ILOG_IMGUI
-#include "utils/imgui_stdlib.h"
+#	include "utils/imgui_stdlib.h"
 
 void ILog::ImGuiConsole::setLogColour(const ImVec4 colour, const LogType type) noexcept
 {
@@ -66,14 +66,15 @@ void ILog::ImGuiConsole::display(bool* bInteractingWithTextbox) const noexcept
 
 	static std::string command;
 	if (ImGui::InputTextWithHint("##Input", "Enter any cmd here", &command, ImGuiInputTextFlags_EnterReturnsTrue,
-		[](ImGuiInputTextCallbackData* data)->int {
+		[](ImGuiInputTextCallbackData* data) -> int {
 			return 0;
-		})) {
+		}))
+	{
 		ImGui::SetKeyboardFocusHere(-1);
 		executeCommand(command);
 		command.clear();
-		if (bInteractingWithTextbox != nullptr) *bInteractingWithTextbox = true;
-		
+		if (bInteractingWithTextbox != nullptr)
+			*bInteractingWithTextbox = true;
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Send##consoleCommand"))
@@ -103,7 +104,8 @@ void ILog::ImGuiConsole::showHelpMessage(const std::string&) noexcept
 
 void ILog::ImGuiConsole::displayFull(bool& bOpen, bool* bInteractingWithTextbox) const noexcept
 {
-	ImGui::Begin("Developer Console", &bOpen);
+	const auto common_flag = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoFocusOnAppearing;
+	ImGui::Begin("Developer Console", &bOpen, common_flag);
 	display(bInteractingWithTextbox);
 	ImGui::End();
 }
