@@ -1,6 +1,21 @@
 #include "ILogImGui.hpp"
 #ifdef ILOG_IMGUI
 #	include "utils/imgui_stdlib.h"
+#	include <algorithm>
+#	include <vector>
+
+namespace
+{
+struct ConsoleCommandHistory
+{
+	std::vector<std::string> commands;
+	std::size_t              position{0};
+	std::string              draft;
+};
+
+ConsoleCommandHistory console_command_history;
+constexpr std::size_t max_console_history = 100;
+}
 
 void ILog::ImGuiConsole::setLogColour(const ImVec4 colour, const LogType type) noexcept
 {
@@ -65,12 +80,58 @@ void ILog::ImGuiConsole::display(bool* bInteractingWithTextbox) const noexcept
 	}
 
 	static std::string command;
-	if (ImGui::InputTextWithHint("##Input", "Enter any cmd here", &command, ImGuiInputTextFlags_EnterReturnsTrue,
-		[](ImGuiInputTextCallbackData* data) -> int {
+	const auto history_callback = [](ImGuiInputTextCallbackData* data) -> int {
+		if (data->EventFlag != ImGuiInputTextFlags_CallbackHistory)
 			return 0;
-		}))
+
+		auto& history = *static_cast<ConsoleCommandHistory*>(data->UserData);
+		if (data->EventKey == ImGuiKey_UpArrow)
+		{
+			if (history.commands.empty())
+				return 0;
+			if (history.position == history.commands.size())
+				history.draft.assign(data->Buf, static_cast<std::size_t>(data->BufTextLen));
+			if (history.position > 0)
+				--history.position;
+		}
+		else if (data->EventKey == ImGuiKey_DownArrow)
+		{
+			if (history.position < history.commands.size())
+				++history.position;
+			else
+				return 0;
+		}
+		else
+		{
+			return 0;
+		}
+
+		const auto& replacement = history.position == history.commands.size() ?
+		                              history.draft :
+		                              history.commands[history.position];
+		data->DeleteChars(0, data->BufTextLen);
+		data->InsertChars(0, replacement.c_str());
+		data->CursorPos = data->BufTextLen;
+		data->SelectionStart = data->SelectionEnd = data->CursorPos;
+		return 0;
+	};
+	if (ImGui::InputTextWithHint(
+	        "##Input",
+	        "Enter any cmd here",
+	        &command,
+	        ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory,
+	        history_callback,
+	        &console_command_history))
 	{
 		ImGui::SetKeyboardFocusHere(-1);
+		if (!command.empty() && (console_command_history.commands.empty() || console_command_history.commands.back() != command))
+		{
+			console_command_history.commands.emplace_back(command);
+			if (console_command_history.commands.size() > max_console_history)
+				console_command_history.commands.erase(console_command_history.commands.begin());
+		}
+		console_command_history.position = console_command_history.commands.size();
+		console_command_history.draft.clear();
 		executeCommand(command);
 		command.clear();
 		if (bInteractingWithTextbox != nullptr)
@@ -79,6 +140,14 @@ void ILog::ImGuiConsole::display(bool* bInteractingWithTextbox) const noexcept
 	ImGui::SameLine();
 	if (ImGui::Button("Send##consoleCommand"))
 	{
+		if (!command.empty() && (console_command_history.commands.empty() || console_command_history.commands.back() != command))
+		{
+			console_command_history.commands.emplace_back(command);
+			if (console_command_history.commands.size() > max_console_history)
+				console_command_history.commands.erase(console_command_history.commands.begin());
+		}
+		console_command_history.position = console_command_history.commands.size();
+		console_command_history.draft.clear();
 		executeCommand(command);
 		command.clear();
 	}
