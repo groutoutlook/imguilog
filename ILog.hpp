@@ -40,6 +40,9 @@ namespace ILog
         std::string cmd; // the name of the command;
         std::string cmdHint; // shown in the help message
         std::function<void(const std::string&)> func; // executes the command instructions
+        // Optional: return full command-line candidates for the text before the cursor.
+        // Called on the UI thread; candidates are prefix-filtered by the console.
+        std::function<std::vector<std::string>(const std::string&)> complete{};
     };
 
     class MLS_PUBLIC_API LoggerInternal

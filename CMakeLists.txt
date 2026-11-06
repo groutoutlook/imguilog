@@ -26,6 +26,7 @@ endif()
 
 
 set(ILOG_BUILD_EXAMPLES OFF CACHE BOOL "Build the example executable")
+option(ILOG_BUILD_TESTS "Build headless console completion tests" OFF)
 
 # Main C++ sources
 set(ILOG_SOURCES
@@ -53,4 +54,9 @@ target_link_libraries(imguilog PUBLIC imgui::imgui)
 
 if (ILOG_BUILD_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+if (ILOG_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
 endif()

@@ -1,0 +1,3 @@
+add_executable(imguilog_console_tests console_completion.cpp)
+target_link_libraries(imguilog_console_tests PRIVATE imguilog)
+add_test(NAME imguilog_console_completion COMMAND imguilog_console_tests)

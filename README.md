@@ -15,6 +15,10 @@ vcpkg install imgui[glfw-binding,opengl3-binding,dx11-binding,dx12-binding,vulka
 - Profiler functions
 - Error shutdown and breaking
 - ImGui console logging widget
+- Command discovery with Tab completion, Ctrl+Space suggestions, usage hints, and history
+
+See [Console commands](docs/CONSOLE_COMMANDS.md) for shortcuts, application-provided
+subcommand completion, a `sled` integration example, and focused tests.
 
 ## Showcase
 The bundled ImGui widget:

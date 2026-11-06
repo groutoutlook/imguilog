@@ -6,6 +6,12 @@
 
 namespace ILog
 {
+    struct CommandSuggestion
+    {
+        std::string command;
+        std::string hint;
+    };
+
     // UntitledImGuiFramework Event Safety - Any time
     class MLS_PUBLIC_API ImGuiConsole
     {
@@ -22,6 +28,10 @@ namespace ILog
         static void addCommand(const CommandType& cmd) noexcept;
 
         static void executeCommand(const std::string& cmd) noexcept;
+
+        // Input is the command line up to the cursor, not necessarily the whole buffer.
+        // Does not execute commands or require an ImGui context.
+        static std::vector<CommandSuggestion> getCommandSuggestions(const std::string& input);
 
         // UntitledImGuiFramework Event Safety - Any time
         void setLogColour(ImVec4 colour, LogType type) noexcept;
