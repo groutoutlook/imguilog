@@ -26,6 +26,7 @@ public:
         io.LogFilename = nullptr;
         io.DisplaySize = ImVec2(1200, 900);
         io.DeltaTime = 1.0f / 60.0f;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         unsigned char* pixels;
         int width, height;
         io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
@@ -40,12 +41,13 @@ public:
     {
         ImGui::NewFrame();
         ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImVec2(1100, 800));
+        ImGui::SetNextWindowSize(ImVec2(540, 260));
         ImGui::Begin("Console completion test", nullptr, ImGuiWindowFlags_NoSavedSettings);
         inputId = ImGui::GetID("##Input");
         if (focus)
             ImGui::SetKeyboardFocusHere();
         console.display(&submitted);
+        commandRow = ImGui::GetCurrentContext()->LastItemData.Rect;
         ImGui::End();
         ImGui::Render();
     }
@@ -95,6 +97,28 @@ public:
         return nullptr;
     }
 
+    void focusWindowOnly()
+    {
+        ImGui::ClearActiveID();
+        ImGui::FocusWindow(ImGui::FindWindowByName("Console completion test"));
+        frame();
+    }
+
+    bool inputActive() const
+    {
+        return ImGui::GetCurrentContext()->ActiveId == inputId;
+    }
+
+    void focusSend()
+    {
+        auto* window = ImGui::FindWindowByName("Console completion test");
+        ImGui::ClearActiveID();
+        ImGui::FocusWindow(window);
+        ImGui::SetNavID(window->GetID("Send##consoleCommand"), ImGuiNavLayer_Main,
+                       window->NavRootFocusScopeId, ImRect());
+        frame();
+    }
+
     void clickFirstSuggestion()
     {
         auto* window = suggestions();
@@ -111,6 +135,7 @@ public:
     }
 
     bool submitted{false};
+    ImRect commandRow;
 
 private:
     ILog::ImGuiConsole console;
@@ -167,9 +192,18 @@ int main()
     ILog::LoggerInternal::get().messageLog.clear();
 
     ConsoleHarness ui;
+    ui.focusWindowOnly();
     ui.control(ImGuiKey_Space);
+    check(ui.inputActive(), "Ctrl+Space focuses input when only the console window is focused");
     check(ui.text().empty(), "Ctrl+Space leaves input unchanged");
     check(ui.suggestions() != nullptr, "Ctrl+Space opens command discovery on empty input");
+
+    ui.type("playback pause");
+    ui.focusSend();
+    ui.control(ImGuiKey_Space);
+    check(executions == 1, "Ctrl+Space never activates a navigation-focused Send button");
+    check(ui.inputActive() && ui.text() == "playback pause", "Ctrl+Space restores input focus without changing its draft");
+    ui.replace("");
 
     ui.type("pla");
     check(ui.suggestions() != nullptr, "typing shows suggestions automatically");
@@ -223,6 +257,25 @@ int main()
     check(ui.text() == "view fonts ", "mouse selection fills input and restores focus (actual: " + ui.text() + ")");
     check(ImGui::GetCurrentContext()->ActiveId != 0, "input remains focused after mouse completion");
     check(executions == 2, "mouse selection does not execute");
+
+    for (int index = 0; index < 300; ++index)
+        ImGuiConsole::addToMessageLog("A log entry before command discovery", ILOG_LOG_TYPE_MESSAGE);
+    ui.replace("");
+    const auto commandRowBeforePopup = ui.commandRow;
+    ui.replace("view ");
+    check(ui.suggestions() != nullptr && ui.suggestions()->InnerClipRect.GetHeight() > ImGui::GetTextLineHeight(),
+          "typing opens a visible suggestion popup over a populated log");
+    check(ui.suggestions()->Pos.y + ui.suggestions()->Size.y <= commandRowBeforePopup.Min.y &&
+          ui.commandRow.Min.y == commandRowBeforePopup.Min.y && ui.commandRow.Max.y == commandRowBeforePopup.Max.y,
+          "popup appears above the command field without moving it");
+    ui.control(ImGuiKey_Space);
+    ui.frame();
+    auto* populatedSuggestions = ui.suggestions();
+    check(populatedSuggestions != nullptr && !populatedSuggestions->SkipItems &&
+          populatedSuggestions->InnerClipRect.GetHeight() > ImGui::GetTextLineHeight(),
+          "Ctrl+Space suggestions stay visible in a small console with a populated log");
+    ui.clickFirstSuggestion();
+    check(ui.inputActive() && ui.text() == "view console ", "mouse selection works over the populated log");
 
     // Multi-byte shared prefixes must not leave invalid UTF-8 in the input.
     ImGuiConsole::addCommand({"accent", "accent <word>", execute, [](const std::string&) {

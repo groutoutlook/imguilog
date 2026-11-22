@@ -8,10 +8,10 @@ completion, history, and dispatch.
 
 | Action | Behavior |
 | --- | --- |
-| Type a command prefix | Show matching registered commands and their usage hints. |
+| Type a command prefix | Open the suggestion popup above the command field and filter it as you type. |
 | Tab | Complete a unique match, or extend the common prefix of several matches. |
 | Tab again | Cycle the original matches in alphabetical order. |
-| Ctrl+Space | Refresh suggestions; an empty input lists all registered command names. |
+| Ctrl+Space | Focus the command input and open suggestions for the current prefix. An empty input lists all registered commands. |
 | Click a suggestion | Fill the input and restore keyboard focus. |
 | Up / Down | Browse the last 100 submitted commands; Down restores the unsent draft. |
 | Enter / Send | Execute the input. Completion itself never executes anything. |
@@ -22,6 +22,10 @@ Matching is case sensitive and uses prefixes. Completion uses the text before
 the cursor, replaces through the end of that token, and preserves later
 arguments. Completing a whole candidate at the end adds a space for the next
 argument. Escape retains Dear ImGui's normal input cancellation behavior.
+The log scrolls independently of the command field. The popup shows up to six
+rows at once, with usage hints alongside the commands.
+Ctrl+Space is registered as an ImGui input shortcut so it also works when the
+console window or Send button has keyboard focus. It cannot activate Send.
 
 ## Existing registrations
 
@@ -107,12 +111,65 @@ process-wide logger/console state. Synchronize access externally if using
 multiple threads. The existing console input and history are shared between
 console instances.
 
+## Relationship to the sibling `cli` library
+
+The local `repo/cli` checkout has a broader command engine behind the same
+interaction pattern. These are the corresponding parts in the checked source:
+
+| Concern | imguilog | `cli` |
+| --- | --- | --- |
+| Registration | `CommandType` in `ILog.hpp` | `Menu::Insert` in `include/cli/menu.h` |
+| Execution | `ImGuiConsole::executeCommand` | `CliSession::Feed` in `include/cli/clisession.h` |
+| Discovery | `getCommandSuggestions`, with optional argument providers | `CliSession::GetCompletions`, recursively querying menus and commands |
+| Help | One usage string per command | Structured `detail::HelpEntry` records containing names, parameters, descriptions, and menu status |
+| History | Shared console input/history | Per-session navigation, with a configurable history storage implementation |
+| Presentation | ImGui input, suggestions, and colored log | Terminal sessions, plus a plain `std::ostream` for command output |
+
+For a shared GUI/terminal command interface, a useful architecture is one
+application-owned command tree, with an ImGui front end and a terminal front end.
+`CliSession::Feed` can execute a submitted GUI command synchronously;
+`CliSession::GetCompletions` can query candidates without running a terminal
+session or an Asio scheduler. The ImGui widget should continue owning widget
+focus, Ctrl+Space routing, cursor-aware insertion, and rendering. The current
+imguilog build continues to use its existing `CommandType` registry.
+
+An optional adapter needs to address these differences before replacing that
+registry:
+
+- **Completion representation:** `cli::Menu::GetCompletionRecursiveHelper`
+  returns candidate tokens from the selected menu. For example, querying
+  `view con` in a suitable menu tree can return `console`; imguilog expects
+  `view console`. The adapter must recover the correct replacement span and
+  full prefix, including nested menus and quoting.
+- **Argument values:** the base `cli::Command` completes command names. Sled's
+  loaded sequences, scene IDs, layers, and frame values still need application
+  providers or a custom command implementation. Typed arguments alone do not
+  supply those values.
+- **Help:** `CliSession::Help` formats text to an output stream. GUI usage hints
+  should come from structured metadata, including a deliberate way to access
+  the session's current-menu and built-in entries.
+- **Session behavior:** choose one owner for history and the built-in
+  `help`/`exit` commands. A CLI `exit` ends the session; Sled's existing `exit`
+  closes the application. Entering a menu also changes the current command
+  scope, which should be visible in the GUI if enabled.
+- **Output and lifetime:** bridge the session's output stream into log entries,
+  keep the session and its stream alive together, and run handlers that touch
+  Sled state on the UI thread. Optional remote input needs dispatch onto that
+  thread.
+
+This comparison comes from source inspection of the sibling checkout. A
+backend adapter and its compatibility tests remain future integration work.
+
 ## Focused validation
 
 The optional test target creates an ImGui context without a rendering backend.
-It checks discovery/filtering, dispatch boundaries, Tab cycling, Ctrl+Space,
-history/draft restoration, cursor-aware replacement, string growth, and mouse
-completion. With ImGui and GLFW available to CMake, configure a separate build:
+It checks discovery and filtering, dispatch boundaries, Tab cycling, Ctrl+Space
+with keyboard navigation and Send focused, history and draft restoration,
+cursor-aware replacement, and string growth. A 540×260 window with 300 log
+entries also verifies that typing and Ctrl+Space show the popup above the
+stationary command field and that mouse selection works there.
+
+With ImGui and GLFW available to CMake, configure a separate build.
 
 ```powershell
 cmake -S . -B out/build/console-tests -G Ninja `
@@ -120,6 +177,10 @@ cmake -S . -B out/build/console-tests -G Ninja `
 cmake --build out/build/console-tests --target imguilog_console_tests
 ctest --test-dir out/build/console-tests --output-on-failure
 ```
+
+The popup checks passed with MSVC 19.52, Ninja, and Dear ImGui 1.92.8 from
+vcpkg, using the existing `out/build/console-tests` configuration. The test
+executable is `bin/imguilog_console_tests.exe`.
 
 On Windows, run this in a developer shell and supply your vcpkg toolchain or
 package search path as needed. For a manual check, focus the console, press

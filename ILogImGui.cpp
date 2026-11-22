@@ -168,7 +168,7 @@ int console_input_callback(ImGuiInputTextCallbackData* data)
 		refresh_suggestions(data);
 		completion.visible = !replacement.empty();
 	}
-	else if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Space, false))
+	else if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_Space))
 	{
 		refresh_suggestions(data);
 		completion.visible = true;
@@ -187,6 +187,69 @@ void remember_command(const std::string& command)
 	}
 	history.position = history.commands.size();
 	history.draft.clear();
+}
+
+void display_suggestions(const ImVec2& inputMin, float inputWidth, float logTop, bool inputActive)
+{
+	auto& completion = console_completion;
+	const auto& suggestions = completion.suggestions;
+	const auto& style = ImGui::GetStyle();
+	const auto rows = std::clamp(suggestions.size(), std::size_t{1}, std::size_t{6});
+	const float bottom = inputMin.y - style.ItemSpacing.y;
+	const float height = (std::min)(bottom - logTop,
+	    ImGui::GetTextLineHeightWithSpacing() * rows + style.WindowPadding.y * 2);
+	if (height < ImGui::GetTextLineHeight())
+		return;
+
+	// Overlay the bottom of the log so suggestions never move the command field.
+	ImGui::SetCursorScreenPos(ImVec2(inputMin.x, bottom - height));
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_PopupBg]);
+	const bool open = ImGui::BeginChild("##CommandSuggestions", ImVec2(inputWidth, height), ImGuiChildFlags_Borders,
+	    ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus);
+	// Clicking a row can deactivate the input before the popup receives focus.
+	const bool clickedPopup = ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+	    ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+	completion.visible = inputActive || clickedPopup || ImGui::IsWindowFocused();
+	if (open && completion.visible)
+	{
+		if (suggestions.empty())
+		{
+			const auto prefix = trim_start(completion.input.substr(0, completion.cursor));
+			const ILog::CommandType* usage = nullptr;
+			for (const auto& command : ILog::LoggerInternal::get().commands)
+				if (matches_command(prefix, command.cmd) && (!usage || command.cmd.size() > usage->cmd.size()))
+					usage = &command;
+			ImGui::TextDisabled("%s", usage && !usage->cmdHint.empty() ? usage->cmdHint.c_str() : "No matching commands");
+		}
+		for (std::size_t index = 0; index < suggestions.size(); ++index)
+		{
+			const auto& suggestion = suggestions[index];
+			ImGui::PushID(static_cast<int>(index));
+			const bool selected = completion.selected == static_cast<int>(index);
+			const float commandWidth = ImGui::GetContentRegionAvail().x * 0.35f;
+			if (ImGui::Selectable(suggestion.command.c_str(), selected, 0, ImVec2(commandWidth, 0)))
+			{
+				completion.pending = suggestion.command;
+				completion.insertPending = true;
+				completion.focusInput = true;
+			}
+			if (selected)
+				ImGui::SetScrollHereY();
+			if (ImGui::IsItemHovered() && ImGui::BeginTooltip())
+			{
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 40);
+				ImGui::TextUnformatted(suggestion.command.c_str());
+				ImGui::TextUnformatted(suggestion.hint.c_str());
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+			ImGui::SameLine();
+			ImGui::TextDisabled("%s", suggestion.hint.c_str());
+			ImGui::PopID();
+		}
+	}
+	ImGui::EndChild();
+	ImGui::PopStyleColor();
 }
 }
 
@@ -262,46 +325,58 @@ std::vector<ILog::CommandSuggestion> ILog::ImGuiConsole::getCommandSuggestions(c
 void ILog::ImGuiConsole::display(bool* bInteractingWithTextbox) const noexcept
 {
 	auto& logger = LoggerInternal::get();
-	for (const auto& a : logger.messageLog)
+	const float logTop = ImGui::GetCursorScreenPos().y;
+	if (ImGui::BeginChild("##ConsoleLog", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), ImGuiChildFlags_NavFlattened))
 	{
-		ImVec4 colour;
-		switch (a.second)
+		for (const auto& a : logger.messageLog)
 		{
-		case ILOG_LOG_TYPE_WARNING:
-			colour = warning;
-			break;
-		case ILOG_LOG_TYPE_ERROR:
-			colour = error;
-			break;
-		case ILOG_LOG_TYPE_NOTE:
-			colour = note;
-			break;
-		case ILOG_LOG_TYPE_SUCCESS:
-			colour = success;
-			break;
-		case ILOG_LOG_TYPE_MESSAGE:
-			colour = message;
-			break;
+			ImVec4 colour;
+			switch (a.second)
+			{
+			case ILOG_LOG_TYPE_WARNING:
+				colour = warning;
+				break;
+			case ILOG_LOG_TYPE_ERROR:
+				colour = error;
+				break;
+			case ILOG_LOG_TYPE_NOTE:
+				colour = note;
+				break;
+			case ILOG_LOG_TYPE_SUCCESS:
+				colour = success;
+				break;
+			case ILOG_LOG_TYPE_MESSAGE:
+				colour = message;
+				break;
+			}
+
+			ImGui::TextColored(colour, "%s", a.first.c_str());
 		}
 
-		ImGui::TextColored(colour, "%s", a.first.c_str());
+		if (!logger.messageLog.empty() && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+			ImGui::SetScrollHereY(1.0f);
 	}
+	ImGui::EndChild();
 
+	// Keep the parent layout based on the command row when the popup overlaps the log.
+	ImGui::BeginGroup();
 	static std::string command;
 	if (console_completion.focusInput)
 	{
 		ImGui::SetKeyboardFocusHere();
 		console_completion.focusInput = false;
 	}
+	ImGui::SetNextItemShortcut(ImGuiMod_Ctrl | ImGuiKey_Space);
 	const bool entered = ImGui::InputTextWithHint(
 	        "##Input",
-	        "Command (Tab to complete, Ctrl+Space to browse)",
+	        "Command (Ctrl+Space for suggestions)",
 	        &command,
 	        ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory |
 	            ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackAlways,
 	        console_input_callback);
 	const bool inputActive = ImGui::IsItemActive();
-	const bool inputDeactivated = ImGui::IsItemDeactivated();
+	const auto inputMin = ImGui::GetItemRectMin();
+	const float inputWidth = ImGui::GetItemRectSize().x;
 	if (entered)
 		ImGui::SetKeyboardFocusHere(-1);
 	ImGui::SameLine();
@@ -316,59 +391,9 @@ void ILog::ImGuiConsole::display(bool* bInteractingWithTextbox) const noexcept
 		if (bInteractingWithTextbox != nullptr)
 			*bInteractingWithTextbox = true;
 	}
-	else if (console_completion.visible &&
-	         (inputActive || inputDeactivated || ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)))
-	{
-		ImGui::TextDisabled("Tab: complete/cycle | Ctrl+Space: browse | Up/Down: history");
-		const auto prefix = trim_start(console_completion.input.substr(0, console_completion.cursor));
-		for (const auto& registered : logger.commands)
-			if (matches_command(prefix, registered.cmd))
-			{
-				ImGui::TextWrapped("%s", registered.cmdHint.c_str());
-				break;
-			}
-		const auto& suggestions = console_completion.suggestions;
-		if (suggestions.empty())
-			ImGui::TextDisabled("No matching completions. Type help to list commands.");
-		else
-		{
-			const auto rows = (std::min)(suggestions.size(), std::size_t{6});
-			if (ImGui::BeginChild("##CommandSuggestions", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * rows + 8),
-			                      false, ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus))
-			{
-				for (std::size_t index = 0; index < suggestions.size(); ++index)
-				{
-					const auto& suggestion = suggestions[index];
-					ImGui::PushID(static_cast<int>(index));
-					const bool selected = console_completion.selected == static_cast<int>(index);
-					const float commandWidth = ImGui::GetContentRegionAvail().x * 0.35f;
-					if (ImGui::Selectable(suggestion.command.c_str(), selected, 0, ImVec2(commandWidth, 0)))
-					{
-						console_completion.pending = suggestion.command;
-						console_completion.insertPending = true;
-						console_completion.focusInput = true;
-					}
-					if (selected)
-						ImGui::SetScrollHereY();
-					if (ImGui::IsItemHovered())
-					{
-						ImGui::BeginTooltip();
-						ImGui::PushTextWrapPos(ImGui::GetFontSize() * 40);
-						ImGui::TextUnformatted(suggestion.command.c_str());
-						ImGui::TextUnformatted(suggestion.hint.c_str());
-						ImGui::PopTextWrapPos();
-						ImGui::EndTooltip();
-					}
-					ImGui::SameLine();
-					ImGui::TextDisabled("%s", suggestion.hint.c_str());
-					ImGui::PopID();
-				}
-			}
-			ImGui::EndChild();
-		}
-	}
-	if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-		ImGui::SetScrollHereY(1.0f);
+	else if (console_completion.visible)
+		display_suggestions(inputMin, inputWidth, logTop, inputActive);
+	ImGui::EndGroup();
 }
 
 void ILog::ImGuiConsole::addToMessageLog(const std::string& msg, LogType type) noexcept
