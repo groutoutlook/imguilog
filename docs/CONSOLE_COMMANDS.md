@@ -8,11 +8,11 @@ completion, history, and dispatch.
 
 | Action | Behavior |
 | --- | --- |
-| Type a command prefix | Open the suggestion popup above the command field and filter it as you type. |
+| Type a command prefix | Show matching commands and their usage hints below the command field. |
 | Tab | Complete a unique match, or extend the common prefix of several matches. |
 | Tab again | Cycle the original matches in alphabetical order. |
-| Ctrl+Space | Focus the command input and open suggestions for the current prefix. An empty input lists all registered commands. |
-| Click a suggestion | Fill the input and restore keyboard focus. |
+| Ctrl+Space | Toggle the list of all registered commands and usage hints while keeping the current draft. |
+| Click a suggestion | Complete the current prefix and restore keyboard focus. In the full list, select a command to replace the draft. |
 | Up / Down | Browse the last 100 submitted commands; Down restores the unsent draft. |
 | Enter / Send | Execute the input. Completion itself never executes anything. |
 | `help` | Print all registered commands and their hints in the log. |
@@ -22,8 +22,8 @@ Matching is case sensitive and uses prefixes. Completion uses the text before
 the cursor, replaces through the end of that token, and preserves later
 arguments. Completing a whole candidate at the end adds a space for the next
 argument. Escape retains Dear ImGui's normal input cancellation behavior.
-The log scrolls independently of the command field. The popup shows up to six
-rows at once, with usage hints alongside the commands.
+The command field follows the log, and the suggestion list shows up to six
+rows below it. Editing the draft or pressing Tab returns to prefix completion.
 Ctrl+Space is registered as an ImGui input shortcut so it also works when the
 console window or Send button has keyboard focus. It cannot activate Send.
 
@@ -93,8 +93,8 @@ Callbacks run synchronously on the UI thread when input/cursor changes or the
 user explicitly requests completion. Keep them fast and free of side effects;
 do not execute commands, mutate the command registry, block on I/O, or return
 placeholders such as `<frame>`. Capture application state with an appropriate
-lifetime, just as for execution callbacks. Ctrl+Space refreshes dynamic values
-even when the input has not changed. Rebuild consumers after changing this
+lifetime, just as for execution callbacks. The full command list uses registered
+command names and usage hints. Rebuild consumers after changing this
 header: the extra field is source compatible with old initializers, but changes
 the C++ struct layout.
 
@@ -163,11 +163,11 @@ backend adapter and its compatibility tests remain future integration work.
 ## Focused validation
 
 The optional test target creates an ImGui context without a rendering backend.
-It checks discovery and filtering, dispatch boundaries, Tab cycling, Ctrl+Space
-with keyboard navigation and Send focused, history and draft restoration,
-cursor-aware replacement, and string growth. A 540×260 window with 300 log
-entries also verifies that typing and Ctrl+Space show the popup above the
-stationary command field and that mouse selection works there.
+It checks discovery and filtering, dispatch boundaries, Tab cycling, history
+and draft restoration, cursor-aware replacement, and string growth. It verifies
+that Ctrl+Space toggles the full list with or without a draft, including from
+Send. A 540×260 window with 300 log entries verifies that the list follows
+the log and that mouse selection works there.
 
 With ImGui and GLFW available to CMake, configure a separate build.
 
@@ -178,12 +178,13 @@ cmake --build out/build/console-tests --target imguilog_console_tests
 ctest --test-dir out/build/console-tests --output-on-failure
 ```
 
-The popup checks passed with MSVC 19.52, Ninja, and Dear ImGui 1.92.8 from
+The console checks passed with MSVC 19.52, Ninja, and Dear ImGui 1.92.8 from
 vcpkg, using the existing `out/build/console-tests` configuration. The test
 executable is `bin/imguilog_console_tests.exe`.
 
 On Windows, run this in a developer shell and supply your vcpkg toolchain or
-package search path as needed. For a manual check, focus the console, press
-Ctrl+Space, type an ambiguous prefix, press Tab repeatedly, then verify Up/Down
-still restores your history and draft. An application should respect ImGui's
+package search path as needed. For a manual check, enter a draft and use
+Ctrl+Space twice to switch between the full list and its contextual matches.
+Then press Tab repeatedly on an ambiguous prefix and check that Up/Down still
+restores your history and draft. An application should respect ImGui's
 keyboard-capture state before dispatching its own global shortcuts.

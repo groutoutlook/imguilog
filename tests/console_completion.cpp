@@ -47,7 +47,6 @@ public:
         if (focus)
             ImGui::SetKeyboardFocusHere();
         console.display(&submitted);
-        commandRow = ImGui::GetCurrentContext()->LastItemData.Rect;
         ImGui::End();
         ImGui::Render();
     }
@@ -119,6 +118,11 @@ public:
         frame();
     }
 
+    float logScroll() const
+    {
+        return ImGui::FindWindowByName("Console completion test")->Scroll.y;
+    }
+
     void clickFirstSuggestion()
     {
         auto* window = suggestions();
@@ -135,7 +139,6 @@ public:
     }
 
     bool submitted{false};
-    ImRect commandRow;
 
 private:
     ILog::ImGuiConsole console;
@@ -197,16 +200,27 @@ int main()
     check(ui.inputActive(), "Ctrl+Space focuses input when only the console window is focused");
     check(ui.text().empty(), "Ctrl+Space leaves input unchanged");
     check(ui.suggestions() != nullptr, "Ctrl+Space opens command discovery on empty input");
+    const float allCommandsHeight = ui.suggestions()->Size.y;
+    const float listPositionWithoutLog = ui.suggestions()->Pos.y;
+    ui.control(ImGuiKey_Space);
+    check(ui.suggestions() == nullptr, "Ctrl+Space closes command discovery on empty input");
 
     ui.type("playback pause");
     ui.focusSend();
     ui.control(ImGuiKey_Space);
     check(executions == 1, "Ctrl+Space never activates a navigation-focused Send button");
     check(ui.inputActive() && ui.text() == "playback pause", "Ctrl+Space restores input focus without changing its draft");
+    check(ui.suggestions() != nullptr && ui.suggestions()->Size.y == allCommandsHeight,
+          "Ctrl+Space lists all commands even with a fully typed command and arguments");
+    ui.control(ImGuiKey_Space);
+    check(ui.text() == "playback pause" && ui.suggestions() != nullptr && ui.suggestions()->Size.y < allCommandsHeight,
+          "toggling browse off restores the draft and its contextual hint");
     ui.replace("");
 
+    ui.control(ImGuiKey_Space);
     ui.type("pla");
-    check(ui.suggestions() != nullptr, "typing shows suggestions automatically");
+    check(ui.suggestions() != nullptr && ui.suggestions()->Size.y < allCommandsHeight,
+          "typing returns to filtered suggestions automatically");
     ui.key(ImGuiKey_Tab);
     check(ui.text() == "playback ", "Tab completes unique command and appends a space");
     check(executions == 1, "completion never executes");
@@ -260,22 +274,20 @@ int main()
 
     for (int index = 0; index < 300; ++index)
         ImGuiConsole::addToMessageLog("A log entry before command discovery", ILOG_LOG_TYPE_MESSAGE);
-    ui.replace("");
-    const auto commandRowBeforePopup = ui.commandRow;
     ui.replace("view ");
+    ui.frame();
     check(ui.suggestions() != nullptr && ui.suggestions()->InnerClipRect.GetHeight() > ImGui::GetTextLineHeight(),
-          "typing opens a visible suggestion popup over a populated log");
-    check(ui.suggestions()->Pos.y + ui.suggestions()->Size.y <= commandRowBeforePopup.Min.y &&
-          ui.commandRow.Min.y == commandRowBeforePopup.Min.y && ui.commandRow.Max.y == commandRowBeforePopup.Max.y,
-          "popup appears above the command field without moving it");
+          "typing shows suggestions in a small console with a populated log");
+    check(ui.logScroll() > 0 && ui.suggestions()->Pos.y + ui.logScroll() > listPositionWithoutLog + 300 * ImGui::GetTextLineHeight(),
+          "the suggestion list follows the log in the console's scrollable content");
     ui.control(ImGuiKey_Space);
     ui.frame();
-    auto* populatedSuggestions = ui.suggestions();
-    check(populatedSuggestions != nullptr && !populatedSuggestions->SkipItems &&
-          populatedSuggestions->InnerClipRect.GetHeight() > ImGui::GetTextLineHeight(),
-          "Ctrl+Space suggestions stay visible in a small console with a populated log");
+    check(ui.suggestions() != nullptr && ui.suggestions()->Size.y == allCommandsHeight &&
+          ui.suggestions()->InnerClipRect.GetHeight() > ImGui::GetTextLineHeight(),
+          "Ctrl+Space shows all commands after the populated log");
     ui.clickFirstSuggestion();
-    check(ui.inputActive() && ui.text() == "view console ", "mouse selection works over the populated log");
+    check(ui.inputActive() && ui.text() == "clear " && executions == 2,
+          "selecting a browsed command replaces the draft without executing");
 
     // Multi-byte shared prefixes must not leave invalid UTF-8 in the input.
     ImGuiConsole::addCommand({"accent", "accent <word>", execute, [](const std::string&) {
